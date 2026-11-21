@@ -18,13 +18,13 @@ namespace HotelManagement_core
         private string _code;
         OtpService _otp;
         AuthenticationService _service;
-        public FrmVerifyCode(RegisterDto register)
+        public FrmVerifyCode(RegisterDto register,AuthenticationService service)
         {
             InitializeComponent();
             _register = register;
             txtMobileNumber.Text = _register.MobileNumber;
             _otp = new OtpService();
-            _service = new AuthenticationService();
+            _service = service;
         }
         public FrmVerifyCode()
         {
@@ -32,17 +32,17 @@ namespace HotelManagement_core
         }
         private OperationResult Validate(string code,string mobileNumber)
         {
-            if (string.IsNullOrWhiteSpace(code) || code.Length>4 &&  code.Length<0)
+            if (string.IsNullOrWhiteSpace(code))
             {
-                return OperationResult.Failed("لطفا کد را صحیح وارد کنید");
+                return OperationResult.Failed("لطفا کد را وارد کنید");
             }
-            if (string.IsNullOrWhiteSpace(mobileNumber) || mobileNumber.Length>11 && mobileNumber.Length<0)
+            if (string.IsNullOrWhiteSpace(mobileNumber))
             {
-                return OperationResult.Failed("لطفا شماره موبایل خود را صحیح وارد کنید");
+                return OperationResult.Failed("لطفا شماره موبایل خود را وارد کنید");
             }
             return OperationResult.Ok();
         }
-        private void btnRegister_Click(object sender, EventArgs e)
+        private async void btnRegister_Click(object sender, EventArgs e)
         {
             bool valid;
             var result=Validate(txtCode.Text, txtMobileNumber.Text);
@@ -58,10 +58,11 @@ namespace HotelManagement_core
                 if (valid)
                 {
                     btnsendCode.Enabled = true;
+                    btnRegister.Visible = false;
                 }
                 return ;
             }
-            var register = _service.AddRegister(_register);
+            var register = await _service.AddRegister(_register);
             MessageBox.Show("ثبت نام انجام شد");
             new FrmLogin().Show();
         }

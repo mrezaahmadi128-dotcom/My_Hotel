@@ -14,10 +14,13 @@ namespace HotelManagement_core
 {
     public partial class FrmRegister : Form
     {
+        AuthenticationService _service;
+
         public FrmRegister()
         {
             InitializeComponent();
-            
+            _service = new AuthenticationService();
+
         }
 
         private void lblTitle_Click(object sender, EventArgs e)
@@ -44,10 +47,16 @@ namespace HotelManagement_core
             var result = ValidateData(register);
             if (!result.Success)
             {
-                MessageBox.Show(result.Message);
+                MessageBox.Show(result.Message, "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            var frm=new FrmVerifyCode(register);
+            result =await _service.ValidateRegisterAsync(register);
+            if (!result.Success)
+            {
+                MessageBox.Show(result.Message,"خطا",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                return;
+            }
+            var frm=new FrmVerifyCode(register,_service);
             //MessageBox.Show("ثبت اطلاعات انجام شد");
             frm.ShowDialog();
             

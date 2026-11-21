@@ -19,17 +19,26 @@ public class AuthenticationService
     {
         _dbContext = DbConnectionFactory.Create();
     }
-    public async Task<OperationResult> AddRegister(RegisterDto register)
+    public async Task<OperationResult> ValidateRegisterAsync(RegisterDto register)
     {
         var result = ValidateRegister(register);
-        if(!result.Success)
+        if (!result.Success)
         {
             return result;
         }
-         var user = await _dbContext.UserAccounts.AnyAsync(r => r.UserName == register.UserName);
+        var user = await _dbContext.UserAccounts.AnyAsync(r => r.UserName == register.UserName);
         if (user)
         {
             return OperationResult.Failed("این نام کاربری قبلاً ثبت شده است");
+        }
+        return OperationResult.Ok();
+    }
+    public async Task<OperationResult> AddRegister(RegisterDto register)
+    {
+        var res=await ValidateRegisterAsync(register);
+        if(!res.Success)
+        {
+            return res;
         }
         var passwordHash=_passwordHasher.HashPassword(register.Password);
         var userAccount = new UserAccount(
@@ -74,7 +83,7 @@ public class AuthenticationService
         };
         return OperationResult<LoginResultDto>.Ok(loginResult);
     }
-    public OperationResult ValidateLogin(LoginDto login)
+    private OperationResult ValidateLogin(LoginDto login)
     {
         if (login == null)
         {
@@ -91,7 +100,7 @@ public class AuthenticationService
         return OperationResult.Ok();
     }
 
-    public OperationResult ValidateRegister(RegisterDto register)
+    private OperationResult ValidateRegister(RegisterDto register)
     {
         if (register == null)
         {

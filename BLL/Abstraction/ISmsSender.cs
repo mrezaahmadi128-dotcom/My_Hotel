@@ -8,4 +8,5 @@ namespace BLL.Abstraction;
 internal interface ISmsSender
 {
      Task<OperationResult> SendAsync(string mobileNumber, string message);
+
 }
