@@ -19,6 +19,7 @@ public class HotelDbContext : DbContext
     public DbSet<Room> Rooms => Set<Room>();
     public DbSet<Reservation> Reservations=> Set<Reservation>();
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
+    public DbSet<PhoneVerification> PhoneVerifications => Set<PhoneVerification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,7 +39,40 @@ public class HotelDbContext : DbContext
             .HasColumnType("datetime2(0)");
 
         });
-            
+        modelBuilder.Entity<PhoneVerification>(entity =>
+        {
+            entity.ToTable("PhoneVerifications");
+            entity.Property(p => p.MobileNumber)
+            .HasMaxLength(11)
+            .IsUnicode(false)
+            .IsRequired();
+
+            entity.Property(p => p.CodeHash)
+            .HasMaxLength(64)
+            .IsUnicode(false)
+            .IsRequired();
+
+            entity.Property(p => p.CreatedAtUtc)
+            .HasColumnType("datetime2(0)")
+            .IsRequired();
+
+            entity.Property(p => p.ExpiresAtUtc)
+            .HasColumnType("datetime2(0)")
+            .IsRequired();
+
+            entity.Property(p => p.FailedAttempts)
+            .HasDefaultValue(0);
+            entity.Property(p => p.IsUsed)
+            .HasDefaultValue(false);
+
+            entity.HasIndex(p => new
+            {
+                p.MobileNumber,
+                p.CreatedAtUtc
+            });
+
+
+        });
             
         modelBuilder.Entity<Guest>(entity =>
         {

@@ -1,6 +1,8 @@
 ﻿using BLL.Abstraction;
 using BLL.Security;
+using DAL;
 using Models;
+using Models.Entities;
 using System;
 using System.ClientModel.Primitives;
 using System.Collections.Generic;
@@ -11,21 +13,29 @@ namespace BLL;
 
 public class OtpService 
 {
-    private string _code;
-    private string _molbileNumber;
-    private DateTimeOffset _expiresAt;
-    private int _attempCount;
     private const int Minutes=2;
     private const int MaxAttemps=5;
-
-
-    public string GenerateAndStorade(string mobileNumber)
+    public OtpService()
     {
-        _code = OtpGenerator.GenerateCode();
-        _molbileNumber = mobileNumber;
-        _expiresAt = DateTimeOffset.UtcNow.AddMinutes(Minutes);
-        _attempCount = 0;
-        return _code;
+        
+    }
+    public async Task<OperationResult> GenerateAndStorade(string mobileNumber)
+    {
+        var verificatio = new PhoneVerification()
+        {
+            CodeHash = OtpGenerator.GenerateCode(),
+            MobileNumber = mobileNumber,
+            CreatedAtUtc = DateTime.UtcNow,
+            ExpiresAtUtc = DateTime.UtcNow,
+            FailedAttempts = 0,
+            IsUsed = true,
+        };
+        var db=DbConnectionFactory.Create();
+        db.PhoneVerifications.Add(verificatio);
+        await db.SaveChangesAsync();
+        return OperationResult.Ok();
+
+
     }
     public OperationResult VerifyCode(string inputCode,string mobileNumber, out bool f)
     {

@@ -17,9 +17,10 @@ namespace HotelManagement_core
             InitializeComponent();
             _guestSrvice = new GuestService();
         }
-        public void ReloadDatagrid()
+        public async Task ReloadDatagrid()
         {
-            dataGridView1.DataSource = _guestSrvice.GetGuests().Data;
+            var res=await _guestSrvice.GetGuestsAsync();
+            dataGridView1.DataSource = res.Data;
         }
         private void FrmGuests_Load(object sender, EventArgs e)
         {

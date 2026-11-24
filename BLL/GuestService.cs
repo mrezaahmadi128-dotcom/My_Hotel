@@ -16,10 +16,10 @@ public class GuestService
     {
         
     }
-    public OperationResult<List<Guest>> GetGuests()
+    public async Task<OperationResult<List<Guest>>> GetGuestsAsync()
     {
         var db=DbConnectionFactory.Create();
-        var guests=db.Guests.ToList();
+        var guests=await db.Guests.ToListAsync();
         return OperationResult<List<Guest>>.Ok(guests);
     }
     public async Task<OperationResult> AddGuestAsync(GuestDto guestDto)

@@ -15,8 +15,8 @@ namespace HotelManagement_core
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             DbConnectionFactory.Initialize(ConfigurationManager.ConnectionStrings["MyHotel"].ConnectionString);
-            var db = DbConnectionFactory.Create();
-            db.Database.Migrate();
+            //var db = DbConnectionFactory.Create();
+            //db.Database.Migrate();
             ApplicationConfiguration.Initialize();
             Application.Run(new FrmRegister());
         }

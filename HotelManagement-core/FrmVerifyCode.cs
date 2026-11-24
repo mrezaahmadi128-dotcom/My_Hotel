@@ -63,8 +63,18 @@ namespace HotelManagement_core
                 return ;
             }
             var register = await _service.AddRegister(_register);
+            if(!register.Success)
+            {
+                MessageBox.Show(register.Message, "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            DialogResult= DialogResult.OK;
             MessageBox.Show("ثبت نام انجام شد");
-            new FrmLogin().Show();
+            var frm = new FrmLogin();
+            if(frm.ShowDialog()==DialogResult.OK)
+            {
+                Close();
+            }
         }
         private void FrmVerifyCode_Load(object sender, EventArgs e)
         {
@@ -72,13 +82,13 @@ namespace HotelManagement_core
 
         private void button1_Click(object sender, EventArgs e)
         {
-            btnsendCode.Enabled = false;
-             _code = _otp.GenerateAndStorade(_register.MobileNumber);
-            lblMessage.Text = "کد تأیید برای شماره موبایل شما صادر شده است.";
-           btnRegister.Visible = true;
-            txtCode.Visible=true;
-            lblok.Visible=true;
-            txtCode.Focus();
+           // btnsendCode.Enabled = false;
+           //  _code = _otp.GenerateAndStorade(_register.MobileNumber);
+           // lblMessage.Text = "کد تأیید برای شماره موبایل شما صادر شده است.";
+           //btnRegister.Visible = true;
+           // txtCode.Visible=true;
+           // lblok.Visible=true;
+           // txtCode.Focus();
             
         }
     }

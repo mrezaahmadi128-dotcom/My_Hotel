@@ -58,6 +58,49 @@ namespace DAL.Migrations
                     b.ToTable("Guests", (string)null);
                 });
 
+            modelBuilder.Entity("Models.Entities.PhoneVerification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(0)");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2(0)");
+
+                    b.Property<int>("FailedAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<bool>("IsUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("MobileNumber")
+                        .IsRequired()
+                        .HasMaxLength(11)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(11)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MobileNumber", "CreatedAtUtc");
+
+                    b.ToTable("PhoneVerifications", (string)null);
+                });
+
             modelBuilder.Entity("Models.Entities.Reservation", b =>
                 {
                     b.Property<int>("Id")
@@ -120,7 +163,7 @@ namespace DAL.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Models.UserAccount", b =>
+            modelBuilder.Entity("Models.Entities.UserAccount", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
