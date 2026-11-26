@@ -1,6 +1,7 @@
 ﻿using BLL.Abstraction;
 using BLL.Security;
 using DAL;
+using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.Entities;
 using System;
@@ -15,74 +16,86 @@ public class OtpService
 {
     private const int Minutes=2;
     private const int MaxAttemps=5;
+    private readonly PasswordHasher _passwordHasher = new();
     public OtpService()
     {
         
     }
-    public async Task<OperationResult> GenerateAndStorade(string mobileNumber)
+    public async Task<OperationResult<string>> GenerateAndStorade(string mobileNumber)
     {
-        var verificatio = new PhoneVerification()
+        if (string.IsNullOrEmpty(mobileNumber))
         {
-            CodeHash = OtpGenerator.GenerateCode(),
+            return OperationResult<string>.Failed("شماره موبایل نامعتبر است");
+        }
+
+        mobileNumber = mobileNumber.Trim();
+        var db = DbConnectionFactory.Create();
+        var old = await db.PhoneVerifications
+            .Where(p => p.MobileNumber == mobileNumber)
+            .Where(p => !p.IsUsed)
+            .ToListAsync();
+        foreach(var o in old)
+        {
+            o.IsUsed = true;
+        }
+        string code = OtpGenerator.GenerateCode();
+        var phone = new PhoneVerification()
+        {
+            CodeHash =_passwordHasher.HashPassword(code) ,
             MobileNumber = mobileNumber,
             CreatedAtUtc = DateTime.UtcNow,
-            ExpiresAtUtc = DateTime.UtcNow,
+            ExpiresAtUtc = DateTime.UtcNow.AddMinutes(Minutes),
             FailedAttempts = 0,
-            IsUsed = true,
+            IsUsed = false
         };
-        var db=DbConnectionFactory.Create();
-        db.PhoneVerifications.Add(verificatio);
+        db.PhoneVerifications.Add(phone);
         await db.SaveChangesAsync();
-        return OperationResult.Ok();
+        return OperationResult<string>.Ok(code);
 
 
     }
-    public OperationResult VerifyCode(string inputCode,string mobileNumber, out bool f)
+    public async Task<OperationResult> VerifyCode(string inputCode,string mobileNumber)
     {
         if(string.IsNullOrWhiteSpace(inputCode))
         {
-            f= false;
             return OperationResult.Failed("کدی برای تایید وجود ندارد");
         }
-        if(mobileNumber!=_molbileNumber)
+        if(string.IsNullOrWhiteSpace(mobileNumber))
         {
-            f = false;
-            return OperationResult.Failed("شماره موبایل مطابقت ندارد");
+            return OperationResult.Failed("شماره موبایل را وارد کنید");
         }
-        if (DateTimeOffset.UtcNow >= _expiresAt)
-        { 
-            ClearCode();
-            f = true;
-            return OperationResult.Failed("کد تایید منقضی شده");
-        }
-        if(MaxAttemps<=_attempCount)
+        mobileNumber=mobileNumber.Trim();
+        var db=DbConnectionFactory.Create();
+        var phone=await db.PhoneVerifications
+            .Where(p=>p.MobileNumber == mobileNumber)
+            .Where(p=>!p.IsUsed)
+            .OrderByDescending(p=>p.CreatedAtUtc)
+            .FirstOrDefaultAsync();
+        if (phone == null)
         {
-            ClearCode();
-            f = true;
-            return OperationResult.Failed("تعداد تلاش‌های مجاز تمام شده است");
+            return OperationResult.Failed("کدی برای این شماره موجود نمی باشد;لطفا دوباره درخواست بفرستید");
         }
-        if (!string.Equals(_code, inputCode, StringComparison.Ordinal))
+        if (phone.ExpiresAtUtc <= DateTime.UtcNow)
         {
-            _attempCount++;
-            if (_attempCount >= MaxAttemps)
-            {
-                ClearCode();
-                f = true;
-                return OperationResult.Failed("تعداد تلاش‌های مجاز تمام شده است");
-            }
-            f = false;
-            return OperationResult.Failed("کد وارده شد صحیح نیست");
+            phone.IsUsed = true;
+            await db.SaveChangesAsync();
+            return OperationResult.Failed("کد منقضی شده است");
         }
-        ClearCode();
-        f = true;
+        if(phone.FailedAttempts>=MaxAttemps)
+        {
+            phone.IsUsed=true;
+            await db.SaveChangesAsync();
+            return OperationResult.Failed("تلاش های مجاز تمام شد؛ کد جدید بگیرید");
+        }
+        if (!_passwordHasher.VerifyPassword(inputCode, phone.CodeHash))
+        {
+            phone.FailedAttempts++;
+            await db.SaveChangesAsync();
+            OperationResult.Failed("کد وارد شده صحیح نمی باشد");
+        }
+        phone.IsUsed = true;
+        await db.SaveChangesAsync();
         return OperationResult.Ok();
-
     }
-    public void ClearCode()
-    {
-        _code = null;
-        _molbileNumber = null;
-        _expiresAt = default;
-        _attempCount= 0;
-    }
+    
 }
