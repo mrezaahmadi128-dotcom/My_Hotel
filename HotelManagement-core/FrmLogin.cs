@@ -71,7 +71,7 @@ public partial class FrmLogin : Form
             return;
         }
         var loginResult = await _authenticationService.LoginAsync(login);
-        if (!  loginResult.Success)
+        if (!loginResult.Success)
         {
             MessageBox.Show(loginResult.Message, "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
@@ -93,5 +93,10 @@ public partial class FrmLogin : Form
             return OperationResult.Failed("لطفاً رمرز عبور خود را وارد کنید");
         }
         return OperationResult.Ok();
-    }        
+    }
+
+    private async void button1_Click_1(object sender, EventArgs e)
+    {
+
+    }
 }

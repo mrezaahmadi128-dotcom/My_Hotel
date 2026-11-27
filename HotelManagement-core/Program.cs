@@ -18,7 +18,7 @@ namespace HotelManagement_core
             //var db = DbConnectionFactory.Create();
             //db.Database.Migrate();
             ApplicationConfiguration.Initialize();
-            Application.Run(new FrmRegister());
+            Application.Run(new FrmLogin());
         }
     }
 }

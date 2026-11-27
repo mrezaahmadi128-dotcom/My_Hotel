@@ -15,7 +15,6 @@ namespace HotelManagement_core
     public partial class FrmVerifyCode : Form
     {
         private RegisterDto _register;
-        private string _code;
         OtpService _otp;
         AuthenticationService _service;
         public FrmVerifyCode(RegisterDto register,AuthenticationService service)
@@ -44,22 +43,17 @@ namespace HotelManagement_core
         }
         private async void btnRegister_Click(object sender, EventArgs e)
         {
-            bool valid;
+            
             var result=Validate(txtCode.Text, txtMobileNumber.Text);
             if(!result.Success)
             {
                 MessageBox.Show(result.Message,"خطا",MessageBoxButtons.OK,MessageBoxIcon.Error);
                 return;
             }
-            var verify=_otp.VerifyCode(txtCode.Text, txtMobileNumber.Text,out valid);
+            var verify=await _otp.VerifyCode(txtCode.Text, txtMobileNumber.Text);
             if (!verify.Success)
             {
                 MessageBox.Show(verify.Message, "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                if (valid)
-                {
-                    btnsendCode.Enabled = true;
-                    btnRegister.Visible = false;
-                }
                 return ;
             }
             var register = await _service.AddRegister(_register);
@@ -80,16 +74,32 @@ namespace HotelManagement_core
         {
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {
-           // btnsendCode.Enabled = false;
-           //  _code = _otp.GenerateAndStorade(_register.MobileNumber);
-           // lblMessage.Text = "کد تأیید برای شماره موبایل شما صادر شده است.";
-           //btnRegister.Visible = true;
-           // txtCode.Visible=true;
-           // lblok.Visible=true;
-           // txtCode.Focus();
-            
+            var result=await _otp.GenerateAndStorade(txtMobileNumber.Text);
+            if(!result.Success)
+            {
+                MessageBox.Show(result.Message,"خطا",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                return ;
+            }
+            var code=result.Data;
+            var win = new WindowsNotificationSender();
+            var send= await win.SendAsync(txtMobileNumber.Text, code);
+            if(!send.Success)
+            {
+                MessageBox.Show(result.Message, "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            MessageBox.Show("کد ارسال شد");
+
+            // btnsendCode.Enabled = false;
+            //  _code = _otp.GenerateAndStorade(_register.MobileNumber);
+            // lblMessage.Text = "کد تأیید برای شماره موبایل شما صادر شده است.";
+            //btnRegister.Visible = true;
+            // txtCode.Visible=true;
+            // lblok.Visible=true;
+            // txtCode.Focus();
+
         }
     }
 }

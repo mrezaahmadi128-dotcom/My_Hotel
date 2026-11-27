@@ -54,6 +54,8 @@ public class OtpService
 
 
     }
+   
+
     public async Task<OperationResult> VerifyCode(string inputCode,string mobileNumber)
     {
         if(string.IsNullOrWhiteSpace(inputCode))
@@ -87,7 +89,7 @@ public class OtpService
             await db.SaveChangesAsync();
             return OperationResult.Failed("تلاش های مجاز تمام شد؛ کد جدید بگیرید");
         }
-        if (!_passwordHasher.VerifyPassword(inputCode, phone.CodeHash))
+        if (_passwordHasher.VerifyPassword(inputCode, phone.CodeHash))
         {
             phone.FailedAttempts++;
             await db.SaveChangesAsync();
